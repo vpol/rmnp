@@ -41,8 +41,9 @@ type Connection struct {
 	stateMutex sync.RWMutex
 	state      connectionState
 
-	Conn *net.UDPConn
-	Addr *net.UDPAddr
+	Conn     *net.UDPConn
+	Addr     *net.UDPAddr
+	IsServer bool
 
 	// for go routines
 	ctx          context.Context
@@ -107,6 +108,7 @@ func (c *Connection) reset() {
 
 	c.Conn = nil
 	c.Addr = nil
+	c.IsServer = false
 
 	c.orderedChain.reset()
 	c.sendBuffer.reset()
@@ -529,7 +531,7 @@ func (c *Connection) GetFallback(key byte, fallback interface{}) interface{} {
 // Del deletes a stored value from this connection instance.
 // It is thread safe.
 func (c *Connection) Del(key byte) {
-	c.valuesMutex.RLock()
-	defer c.valuesMutex.RUnlock()
+	c.valuesMutex.Lock()
+	defer c.valuesMutex.Unlock()
 	delete(c.values, key)
 }
